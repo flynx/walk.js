@@ -1,0 +1,4 @@
+.*
+*.sw[po]
+*.vim
+node_modules/*

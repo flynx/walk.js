@@ -43,19 +43,32 @@ Target use-cases:
 			
 	sum( [1, [2, 3], 4, [[5], 6]] ) // -> 21
 	```
+	For reference here is a *recursive* `.reduce(..)` example:
+	```javascript
+	function sumr(l){
+		return l.reduce(function(r, e){
+			return r + (e instanceof Array ?
+				sumr(e)
+				: e) }, 0) }
+
+	sumr( [1, [2, 3], 4, [[5], 6]] ) // -> 21
+	```
 - Need to abort the recursion prematurelly:
 	```javascript
+	// check if structure contains 0...
 	var containsZero = walk(function(r, e, next, down, stop){
 		return e === 0 ? 
 				// target found, abort the search...
 				stop(true)
 			: e instanceof Array ?
+				// breadth-first walk...
 				!!next(...e)
 			: r }, false)
 
 	containsZero( [1, [2, 0], 4, [[5], 6]] ) // -> true
 	containsZero( [1, [2, 5], 4, [[5], 6]] ) // -> false
 	```
+	See a more usefull search in [examples](#examples)...
 
 
 ## Installation and loading

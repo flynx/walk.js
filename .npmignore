@@ -1,0 +1,5 @@
+.npm*
+*.vim
+*.sw[po]
+.git
+npm-debug.log
