@@ -1,0 +1,26 @@
+{
+  "name": "generic-walk",
+  "version": "0.0.1",
+  "description": "An extensible tree walk(..) framework...",
+  "main": "walk.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flynx/walk.js.git"
+  },
+  "keywords": [
+    "JavaScript",
+    "recursion",
+    "tool",
+    "functional",
+    "function"
+  ],
+  "author": "Alex A. Naanou <alex.nanou@gmail.com> (https://github.com/flynx)",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/flynx/walk.js/issues"
+  },
+  "homepage": "https://github.com/flynx/walk.js#readme"
+}
