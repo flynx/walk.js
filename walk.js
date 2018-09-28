@@ -129,7 +129,9 @@
 //
 // XXX might be a good idea to move this into it's own module...
 // 		generic-walk might be a good name...
-var walk = function(get, state, ...nodes){
+var walk = 
+module.walk =
+function(get, state, ...nodes){
 	var context = {}
 	// this is used to break out of the recursion...
 	// NOTE: this can leak out but we only care about it's identity thus
