@@ -89,7 +89,7 @@ And for *flat* lists `.reduce(..)` and friends are simpler and more logical. `wa
 				// abort search, report number of nodes visited...
 				stop(this.nodes_visited+1)
 			: e instanceof Array ?
-				next('queue', ...e)
+				next('do', ...e)
 			: (this.nodes_visited++, r) }, false)
 
 	containsZero( [1, [2, 0], 4, [[5], 6]] ) // -> 3
