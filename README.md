@@ -3,22 +3,36 @@
 An extensible tree walk(..) framework...
 
 
+- [walk.js](#walkjs)
+	- [Theory and operation](#theory-and-operation)
+		- [Constructing the walker and walking ( walk(..) )](#constructing-the-walker-and-walking--walk)
+		- [Getting and processing nodes ( getter(..) )](#getting-and-processing-nodes--getter)
+		- [Putting it all together](#putting-it-all-together)
+	- [Installation and loading](#installation-and-loading)
+	- [API](#api)
+		- [`getter(..)`](#getter)
+		- [`done(..)` (optional)](#done-optional)
+	- [Examples](#examples)
+
+
+
 ## Theory and operation
 
 This module generalizes structure traverse (*walking*). This is done via a `walk(..)` function that recieves a user-defined `getter(..)` function and returns a *walker*.
 
 
-### Constructing the walker and walking
+### Constructing the walker and walking ( walk(..) )
 
-`walk(getter)(state, ...nodes) -> state`  
-`walk(getter, state)(...nodes) -> state`  
-`walk(getter, state, ...nodes) -> state`  
-- Recieves a `getter` function a `state` and a list of `nodes`,
-- Iterates through `nodes` calling the `getter(..)` per node, threading the `state` through each call,
+`walk(getter[, done])(state, ...nodes) -> state`  
+`walk(getter[, done], state)(...nodes) -> state`  
+`walk(getter[, done], state, ...nodes) -> state`  
+- Recieves a `getter` function, an optional `done` function, a `state` and a list of `nodes`,
+- Iterates through `nodes`, calling the `getter(..)` per node and threading the `state` through each call,
+- If `done(..)` is given, it is called passing the `state` after walking is done, the return value is set as the new `state` value,
 - Returns the `state` when there are no more `nodes`.
 
 
-### Getting and processing nodes
+### Getting and processing nodes ( getter(..) )
 
 `getter(state, node, next, stop) -> state`  
 - Recieves `state`, `node` and two control functions: `next` and `stop`,
@@ -84,6 +98,7 @@ And for *flat* lists `.reduce(..)` and friends are simpler and more logical. `wa
 	See a more usefull search in [examples](#examples)...
 
 
+
 ## Installation and loading
 
 ```shell
@@ -97,21 +112,27 @@ var walk = require('generic-walk').walk
 *Note: This module supports both AMD and node's `require(..)`**
 
 
+
 ## API
 
 `walk(getter(..)) -> walker(state, ...nodes)`  
+`walk(getter(..), done(..)) -> walker(state, ...nodes)`  
 Construct a reusable walker.
 
 
 `walk(getter(..), state) -> walker(...nodes)`  
+`walk(getter(..), done(..), state) -> walker(...nodes)`  
 Construct a reusable walker with fixed initial state.
 
 
 `walk(getter(..), state, ...nodes) -> result`  
+`walk(getter(..), done(..), state, ...nodes) -> result`  
 Walk the nodes.
 
+*Note that `state` can not be a function.*
 
-### The getter
+
+### `getter(..)`
 
 `getter(state, node, next(..), stop(..)) -> state`  
 User provided function, called to process a node.
@@ -130,6 +151,13 @@ Walk `nodes` and return `state`. The nodes will get *walked* immidiately.
 Stop walking and return `state`. The passed `state` is directly returned from the *walker*.
 
 *Note that `stop(..)` behaves in a similar manner to `return`, i.e. execution is aborted immidiately.*
+
+
+### `done(..)` (optional)
+
+`done(state) -> state`  
+User provided function, if given, is called by the *walker* after walking is done (no more nodes to handle). `state` is passed as argument and the return value is returned from the *walker*. This is run in the same context (`this`) as `getter(..)`.
+
 
 
 ## Examples
@@ -158,30 +186,30 @@ sumd([1, [2], 3, [[4, 5]]]) // -> 15 ...walks the nodes: 1, 2, 3, 4, 5
 To explicitly see the paths the `sum`/`sumd` take we need to modify them a little:
 ```javascript
 var makeSummer = function(mode){
-	return walk(function(res, node, next){
-		this.log(node)
-		return node instanceof Array ?
-			next(mode == 'breadth-first' ? 'queue' : 'do', res, ...node) 
-			: res + node }, 0) }
+	var walker = walk(
+		function(res, node, next){
+			this.log(node)
+			return node instanceof Array ?
+				next(mode == 'breadth-first' ? 'queue' : 'do', 
+					res, 
+					...node) 
+				: res + node },
+		// print the path when done...
+		function(state){
+			console.log('-->', this.path)
+			return state
+		}, 
+		1) 
+	// log the nodes...
+	walker.prototype.log = function(node){
+		this.path = node instanceof Array ?
+			this.path
+			: (this.path || []).concat([node]) } 
+	return walker
+}
 
 var sum = makeSummer('breadth-first')
 var sumd = makeSummer('depth-first')
-
-// define the path logger...
-sum.prototype.log = 
-sumd.prototype.log =
-function(node){
-	this.path = node instanceof Array ?
-		this.path
-		: (this.path || []).concat([node])
-} 
-// XXX need a more natural way to catch the end of the walk...
-sum.prototype.onWalkEnd = 
-sumd.prototype.onWalkEnd = 
-function(res){ 
-	console.log('-->', this.path)
-	return res
-}
 
 sum([1, [2], 3, [[4, 5]]]) // -> 15
 

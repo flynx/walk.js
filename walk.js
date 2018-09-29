@@ -7,38 +7,43 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
-// XXX might be a good idea to add a way to do something on start/end of 
-// 		walk...
-// 		...we can easily determine if this is the first call to getter(..)
-// 		by checking and then setting an attr on the context...
+// Walk a set of nodes...
+// 
+//	Construct a walker...
+//	walk(getter(..))
+//	walk(getter(..), done(..))
+//		-> walker(state, ...nodes)
+//			-> state
+//
+//	Construct a walker with a curried start state...
+//	walk(getter(..), state)
+//	walk(getter(..), done(..), state)
+//		-> walker(...nodes)
+//			-> state
+//
+//	Walk the set of nodes...
+//	walk(getter(..), state, ...nodes)
+//	walk(getter(..), done(..), state, ...nodes)
+//		-> state
+//
+// NOTE: state can not be a function...
+//
+//
 // XXX this is essentially a version of .reduce(..), I wonder if it is 
 // 		feasible to do a version of .map(..), i.e. a mechanism to modify/clone
 // 		the input...
-// XXX we need a way to handle the walk end event...
-// 		ways this can be done:
-// 			- a type argument to getter...
-// 					getter(action, ...)
-// 					getter('start', state)
-// 					getter('node', state, node, ...)
-// 					getter('stop', state)
-// 				+ uniform and adds no new clutter...
-// 				- this will make the general case getter more complex
-// 				Q: can we implement this or a similar approach in way 
-// 					that would abstract the user from the actions unless 
-// 					they want to handle it???
-// 						...currently, they would need to handle the actions 
-// 						to ignore the non-node actions...
-// 						...one way to go is to simply mark the first/last 
-// 						calls to getter in some way... 
-// 						the problem here is that there is no way to tell 
-// 						if a specific getter is last before the call is made...
-// 			- event handlers (see .onWalkEnd) -- REJECTED
-// 				- non-uniform...
-// 			- a second handler passed to walk(..)
-// 				- will mess up the signature that is already complex...
+// XXX EXPERIMENTAL: done(..) handler is not yet final...
 var walk = 
 module.walk =
 function(getter, state, ...nodes){
+	// XXX EXPERIMENTAL...
+	var done
+	// we've got a done handler passed...
+	if(state instanceof Function){
+		done = state
+		state = nodes.shift()
+	}
+
 	// holds the constructed walker function, used mainly to link its 
 	// .prototype to the context of the getter(..)...
 	var func
@@ -141,11 +146,10 @@ function(getter, state, ...nodes){
 			}
 		}
 
-		// onWalkEnd handler...
-		// XXX need a more natural way to do this while providing access 
-		// 		to the context...
-		res = context.onWalkEnd ?
-			context.onWalkEnd(res)
+		// call the done handler...
+		// XXX EXPERIMENTAL...
+		res = done ?
+			done.call(context, res)
 			: res
 
 		return res
@@ -153,7 +157,7 @@ function(getter, state, ...nodes){
 
 	return (
 		// reusable walker...
-		arguments.length == 1 ?
+		arguments.length == (done ? 2 : 1) ?
 			// NOTE: this wrapper is here so as to isolate and re-order res 
 			// 		construction and passing it to the next level...
 			// 		this is needed as when we do:
@@ -167,7 +171,7 @@ function(getter, state, ...nodes){
 				return _walk(nodes, state) })
 		// reusable walker with a curried initial state... 
 		// NOTE: better keep this immutable or clone this in get(..)
-		: arguments.length == 2 ?
+		: arguments.length == (done ? 3 : 2) ?
 			(func = function(...nodes){
 				return _walk(nodes, state) })
 		// walk...
