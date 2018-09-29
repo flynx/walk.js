@@ -2,9 +2,13 @@
 
 An extensible tree walk(..) framework...
 
+
 ## Theory and operation
 
-This module generalizes structure traverse (*walking*). This is done via a `walk(..)` function that recieves a user-defined `getter(..)` and returns a *walker*.
+This module generalizes structure traverse (*walking*). This is done via a `walk(..)` function that recieves a user-defined `getter(..)` function and returns a *walker*.
+
+
+### Constructing the walker and walking
 
 `walk(getter)(state, ...nodes) -> state`  
 `walk(getter, state)(...nodes) -> state`  
@@ -12,6 +16,9 @@ This module generalizes structure traverse (*walking*). This is done via a `walk
 - Recieves a `getter` function a `state` and a list of `nodes`,
 - Iterates through `nodes` calling the `getter(..)` per node, threading the `state` through each call,
 - Returns the `state` when there are no more `nodes`.
+
+
+### The getter
 
 `getter(state, node, next, down, stop) -> state`  
 - Recieves `state`, `node` and three control functions: `next`, `down` and `stop`,
@@ -21,6 +28,9 @@ This module generalizes structure traverse (*walking*). This is done via a `walk
 - Can walk nodes directly via `down(state, ...nodes) -> state`
 - Can abbort *walking* and return a state via `stop()` or `stop(state)`
 - Returns `state`,
+
+
+### Putting it all together
 
 A trivial *flat* example...
 ```javascript
@@ -32,11 +42,11 @@ The above is essentially equivalent to...
 [1,2,3].reduce(function(r, n){ return r+n }, 0) // -> 6
 ```
 
-And for trivial or *flat* lists `.reduce(..)` and friends are simpler and more logical.
+And for *flat* lists `.reduce(..)` and friends are simpler and more logical. `walk(..)` is designed to simplify more complex cases:
 
-Target use-cases:
 - The input is not *flat*:
 	```javascript
+	// sum the items in a *deep* array (depth-first)...
 	var sum = walk(function(r, n){
 		return n instanceof Array ?
 			down(r, ...n)
@@ -54,6 +64,7 @@ Target use-cases:
 
 	sumr( [1, [2, 3], 4, [[5], 6]] ) // -> 21
 	```
+
 - Need to abort the recursion prematurelly:
 	```javascript
 	// check if structure contains 0...
@@ -61,7 +72,8 @@ Target use-cases:
 		// NOTE: we'll only count leaf nodes...
 		this.nodes_visited = (this.nodes_visited || 0)
 		return e === 0 ? 
-				// target found, abort the search and report number of nodes visited...
+				// target found...
+				//...abort search, report number of nodes visited...
 				stop(this.nodes_visited+1)
 			: e instanceof Array ?
 				// breadth-first walk...
@@ -146,7 +158,7 @@ var sumd = walk(function(res, node, next, down, stop){
 sumd([1, [2], 3, [[4, 5]]]) // -> 15 ...walks the nodes: 1, 2, 3, 4, 5
 ```
 
-To explicitly see the paths the above take:
+To explicitly see the paths the `sum`/`sumd` take we need to modify them a little:
 ```javascript
 var sum = walk(function(res, node, next){
 	this.log(node)
@@ -161,11 +173,21 @@ var sumd = walk(function(res, node, next, down, stop){
 		down(res, ...node)
 		: res + node }, 0)
 
+// define the path logger...
 sum.prototype.log = 
-sumd.prototype.log = 
-function(node){ 
-	node instanceof Array 
-		|| console.log('-->', node) }
+sumd.prototype.log =
+function(node){
+	this.path = node instanceof Array ?
+		this.path
+		: (this.path || []).concat([node])
+} 
+// XXX need a more natural way to catch the end of the walk...
+sum.prototype.onWalkEnd = 
+sumd.prototype.onWalkEnd = 
+function(res){ 
+	console.log('-->', this.path)
+	return res
+}
 
 sum([1, [2], 3, [[4, 5]]]) // -> 15
 
