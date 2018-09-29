@@ -46,7 +46,7 @@ function(getter, state, ...nodes){
 	// NOTE: this can leak out but we only care about it's identity thus
 	// 		no damage is likely to be done...
 	var WalkStopException
-	// This is used to hold the result when stop(..) is called, until we 
+	// this is used to hold the result when stop(..) is called, until we 
 	// catch WalkStopException and return it from the walker...
 	var stop_res
 
@@ -55,7 +55,7 @@ function(getter, state, ...nodes){
 		// construct a comfortable env for the user and handle the 
 		// results...
 		var _get = function(node){
-			var next = []
+			var next_nodes = []
 
 			// stop walking...
 			// 	stop()
@@ -63,32 +63,49 @@ function(getter, state, ...nodes){
 			//
 			// NOTE: 'throw' is used to stop all handling, including 
 			// 		the rest of the current level...
-			var stop = function(r){
-				stop_res = r
+			var stop = function(state){
+				stop_res = state
 				WalkStopException = new Error('WALK_STOP_EVENT')
 				throw WalkStopException 
 			}
 
-			res = getter.call(context,
-				res, 
-				node, 
-				function(action, state, ...nodes){
-					// queue nodes (breadth-first)...
-					if(action == 'queue'){
-						next = nodes
+			// handle more nodes...
+			//
+			// 	Qeueue nodes for processing (breadth-first)...
+			// 	next('queue', state, ...nodes) 
+			// 		-> state
+			// 		NOTE: this returns state as-is, this is done to 
+			// 			preserve signature compatibility with 
+			// 			next('do', ..)...
+			//
+			// 	Process nodes (depth-first)...
+			// 	next('do', state, ...nodes) 
+			// 		-> state
+			//
+			// 	Stop processing and return from walker...
+			// 	next('stop')
+			// 	next('stop', state)
+			//
+			var next = function(action, state, ...nodes){
+				// queue nodes (breadth-first)...
+				if(action == 'queue'){
+					next_nodes = nodes
 
-					// process nodes (depth-first)...
-					} else if(action == 'do'){
-						state = _step(context, nodes, state)
+				// process nodes (depth-first)...
+				} else if(action == 'do'){
+					state = _step(context, nodes, state)
 
-					// stop processing...
-					} else if(action == 'stop'){
-						stop(state)
-					}
-					return state
-				},
-				stop)
-			return next
+				// stop processing...
+				} else if(action == 'stop'){
+					stop(state)
+				}
+				return state
+			}
+
+			// call the getter...
+			res = getter.call(context, res, node, next, stop)
+
+			return next_nodes
 		}
 
 		return nodes.length == 0 ?
@@ -98,10 +115,10 @@ function(getter, state, ...nodes){
 			// NOTE: see note below... ( ;) )
 			: _step(context, nodes
 				.map(_get)
-				.reduce(function(next, e){
+				.reduce(function(next_nodes, e){
 					return e instanceof Array ? 
-						next.concat(e) 
-						: next.push(e) }, []), res) 
+						next_nodes.concat(e) 
+						: next_nodes.push(e) }, []), res) 
 	} 
 	// _step(..) wrapper, handle WalkStopException and setup the initial
 	// context...
