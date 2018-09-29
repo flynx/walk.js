@@ -109,7 +109,7 @@ $ npm install --save generic-walk
 var walk = require('generic-walk').walk
 ```
 
-*Note: This module supports both AMD and node's `require(..)`**
+*Note: This module supports both [`requirejs(..)`](https://requirejs.org) and node's `require(..)`**
 
 
 
