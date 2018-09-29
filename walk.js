@@ -32,9 +32,10 @@
 // 						calls to getter in some way... 
 // 						the problem here is that there is no way to tell 
 // 						if a specific getter is last before the call is made...
-// 			- event handlers (see .onWalkEnd)
+// 			- event handlers (see .onWalkEnd) -- REJECTED
 // 				- non-uniform...
 // 			- a second handler passed to walk(..)
+// 				- will mess up the signature that is already complex...
 var walk = 
 module.walk =
 function(getter, state, ...nodes){
@@ -55,27 +56,38 @@ function(getter, state, ...nodes){
 		// results...
 		var _get = function(node){
 			var next = []
+
+			// stop walking...
+			// 	stop()
+			// 	stop(value)
+			//
+			// NOTE: 'throw' is used to stop all handling, including 
+			// 		the rest of the current level...
+			var stop = function(r){
+				stop_res = r
+				WalkStopException = new Error('WALK_STOP_EVENT')
+				throw WalkStopException 
+			}
+
 			res = getter.call(context,
 				res, 
 				node, 
-				// breadth first step...
-				// 	next(...nodes) -> undefined
-				function(...nodes){ next = nodes },
-				// depth first step...
-				// 	down(state, ..nodes) -> res
-				function(res, ...nodes){ 
-					return _step(context, nodes, res) },
-				// stop walking...
-				// 	stop()
-				// 	stop(value)
-				//
-				// NOTE: 'throw' is used to stop all handling, including 
-				// 		the rest of the current level...
-				function(r){
-					stop_res = r
-					WalkStopException = new Error('WALK_STOP_EVENT')
-					throw WalkStopException 
-				})
+				function(action, state, ...nodes){
+					// queue nodes (breadth-first)...
+					if(action == 'queue'){
+						next = nodes
+
+					// process nodes (depth-first)...
+					} else if(action == 'do'){
+						state = _step(context, nodes, state)
+
+					// stop processing...
+					} else if(action == 'stop'){
+						stop(state)
+					}
+					return state
+				},
+				stop)
 			return next
 		}
 

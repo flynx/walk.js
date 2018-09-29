@@ -18,14 +18,14 @@ This module generalizes structure traverse (*walking*). This is done via a `walk
 - Returns the `state` when there are no more `nodes`.
 
 
-### The getter
+### Getting and processing nodes
 
-`getter(state, node, next, down, stop) -> state`  
-- Recieves `state`, `node` and three control functions: `next`, `down` and `stop`,
+`getter(state, node, next, stop) -> state`  
+- Recieves `state`, `node` and two control functions: `next` and `stop`,
 - Called in a context (`this`), persistent within one `walk(..)` call, inherited from *walker*`.prototype` and usable to store data between `getter(..)` calls,
 - Can process `node` and `state`,
-- Can queue nodes for walking via `next(...nodes)`
-- Can walk nodes directly via `down(state, ...nodes) -> state`
+- Can queue nodes for walking via `next('queue', state, ...nodes)`
+- Can walk nodes directly via `next('do', state, ...nodes) -> state`
 - Can abbort *walking* and return a state via `stop()` or `stop(state)`
 - Returns `state`,
 
@@ -47,14 +47,14 @@ And for *flat* lists `.reduce(..)` and friends are simpler and more logical. `wa
 - The input is not *flat*:
 	```javascript
 	// sum the items in a *deep* array (depth-first)...
-	var sum = walk(function(r, n){
+	var sum = walk(function(r, n, next){
 		return n instanceof Array ?
-			down(r, ...n)
+			next('queue', r, ...n)
 			: r + n }, 0) 
 			
 	sum( [1, [2, 3], 4, [[5], 6]] ) // -> 21
 	```
-	For reference here is a *recursive* `.reduce(..)` example:
+	For reference here is a *recursive* `.reduce(..)` example, already a bit more complex:
 	```javascript
 	function sumr(l){
 		return l.reduce(function(r, e){
@@ -68,16 +68,14 @@ And for *flat* lists `.reduce(..)` and friends are simpler and more logical. `wa
 - Need to abort the recursion prematurelly:
 	```javascript
 	// check if structure contains 0...
-	var containsZero = walk(function(r, e, next, down, stop){
+	var containsZero = walk(function(r, e, next, stop){
 		// NOTE: we'll only count leaf nodes...
 		this.nodes_visited = (this.nodes_visited || 0)
 		return e === 0 ? 
-				// target found...
-				//...abort search, report number of nodes visited...
+				// abort search, report number of nodes visited...
 				stop(this.nodes_visited+1)
 			: e instanceof Array ?
-				// breadth-first walk...
-				!!next(...e)
+				next('queue', ...e)
 			: (this.nodes_visited++, r) }, false)
 
 	containsZero( [1, [2, 0], 4, [[5], 6]] ) // -> 3
@@ -115,15 +113,15 @@ Walk the nodes.
 
 ### The getter
 
-`getter(state, node, next(..), down(..), stop(..)) -> state`  
+`getter(state, node, next(..), stop(..)) -> state`  
 User provided function, called to process a node.
 
 
-`next(...nodes)`  
-Queue `nodes` for walking. The queued nodes will get *walked* after this level of nodes is done (i.e. the `getter(..)` is called for each node on level).
+`next('queue', state, ...nodes) -> state`  
+Queue `nodes` for walking. The queued nodes will get *walked* after this level of nodes is done (i.e. the `getter(..)` is called for each node on level). `state` is returned as-is. This is done to make `next('queue', ..)` and `next('do', ..)` signature compatible and this simpler to use.
 
 
-`down(state, ...nodes) -> state`  
+`next('do', state, ...nodes) -> state`  
 Walk `nodes` and return `state`. The nodes will get *walked* immidiately.
 
 
@@ -140,9 +138,7 @@ Sum all the values of a nested array (breadth-first)...
 ```javascript
 var sum = walk(function(res, node, next){
 	return node instanceof Array ?
-		// compensate for that next(..) returns undefined...
-		next(...node) 
-			|| res
+		next('queue', res, ...node) 
 		: res + node }, 0)
 
 sum([1, [2], 3, [[4, 5]]]) // -> 15 ...walks the nodes: 1, 3, 2, 4, 5
@@ -150,9 +146,10 @@ sum([1, [2], 3, [[4, 5]]]) // -> 15 ...walks the nodes: 1, 3, 2, 4, 5
 
 Sum all the values of a nested array (depth-first)...
 ```javascript
-var sumd = walk(function(res, node, next, down, stop){
+var sumd = walk(function(res, node, next){
 	return node instanceof Array ?
-		down(res, ...node)
+		// yes, this is the only difference...
+		next('do', res, ...node)
 		: res + node }, 0)
 
 sumd([1, [2], 3, [[4, 5]]]) // -> 15 ...walks the nodes: 1, 2, 3, 4, 5
@@ -160,18 +157,15 @@ sumd([1, [2], 3, [[4, 5]]]) // -> 15 ...walks the nodes: 1, 2, 3, 4, 5
 
 To explicitly see the paths the `sum`/`sumd` take we need to modify them a little:
 ```javascript
-var sum = walk(function(res, node, next){
-	this.log(node)
-	return node instanceof Array ?
-		// compensate for that next(..) returns undefined...
-		next(...node) 
-			|| res
-		: res + node }, 0)
-var sumd = walk(function(res, node, next, down, stop){
-	this.log(node)
-	return node instanceof Array ?
-		down(res, ...node)
-		: res + node }, 0)
+var makeSummer = function(mode){
+	return walk(function(res, node, next){
+		this.log(node)
+		return node instanceof Array ?
+			next(mode == 'breadth-first' ? 'queue' : 'do', res, ...node) 
+			: res + node }, 0) }
+
+var sum = makeSummer('breadth-first')
+var sumd = makeSummer('depth-first')
 
 // define the path logger...
 sum.prototype.log = 
@@ -199,7 +193,7 @@ FInd first zero in tree and return it's path...
 // NOTE: the only reason this is wrapped into a function is that we need
 //  	to restrict the number of items (L) this is passed to 1...
 var firstZero = function(L){
-	return walk(function(res, node, next, down, stop){
+	return walk(function(res, node, next, stop){
 		// setup...
 		if(this.path == null){
 			this.path = []
@@ -214,9 +208,7 @@ var firstZero = function(L){
 				stop(path.slice(1).concat([k]))
 			: v instanceof Object?
 				(path.push(k), 
-				down(
-					res, 
-					...Object.entries(v)))
+				next('do', res, ...Object.entries(v)))
 			: res}, false, L) }
 
 firstZero([10, 5, [{x: 1, y: 0}, 4]]) // -> ['2', '0', 'y']
