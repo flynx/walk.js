@@ -63,7 +63,7 @@ And for *flat* lists `.reduce(..)` and friends are simpler and more logical. `wa
 	// sum the items in a *deep* array (depth-first)...
 	var sum = walk(function(r, n, next){
 		return n instanceof Array ?
-			next('queue', r, ...n)
+			next('do', r, ...n)
 			: r + n }, 0) 
 			
 	sum( [1, [2, 3], 4, [[5], 6]] ) // -> 21
