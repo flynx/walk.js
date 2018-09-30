@@ -10,6 +10,7 @@ An extensible tree walk(..) framework...
 		- [Putting it all together](#putting-it-all-together)
 	- [Installation and loading](#installation-and-loading)
 	- [API](#api)
+		- [`walk(..)`](#walk)
 		- [`getter(..)`](#getter)
 		- [`done(..)` (optional)](#done-optional)
 	- [Examples](#examples)
@@ -115,6 +116,8 @@ var walk = require('generic-walk').walk
 
 ## API
 
+### `walk(..)`
+
 `walk(getter(..)) -> walker(state, ...nodes)`  
 `walk(getter(..), done(..)) -> walker(state, ...nodes)`  
 Construct a reusable walker.
@@ -129,21 +132,23 @@ Construct a reusable walker with fixed initial state.
 `walk(getter(..), done(..), state, ...nodes) -> result`  
 Walk the nodes.
 
-*Note that `state` can not be a function.*
+*Note that `state` can not be a function unless `done(..)` is provided.*
 
 
 ### `getter(..)`
 
 `getter(state, node, next(..), stop(..)) -> state`  
-User provided function, called to process a node.
+User provided function, called to process a node. `getter(..)` is passed the current `state`, the `node` and two control functions: `next(..)` and `stop(..)` to control the *walk* execution flow.
 
 
 `next('queue', state, ...nodes) -> state`  
-Queue `nodes` for walking. The queued nodes will get *walked* after this level of nodes is done (i.e. the `getter(..)` is called for each node on level). `state` is returned as-is. This is done to make `next('queue', ..)` and `next('do', ..)` signature compatible and this simpler to use.
+Queue `nodes` for walking (*breadth-first*). The queued nodes will get *walked* after this level of nodes is done, i.e. after the `getter(..)` is called for each node on current level.
+
+*Note that this does not change the state in any way and returns it as-is, this is done for signature compatibility with `next('do', ..)`*
 
 
 `next('do', state, ...nodes) -> state`  
-Walk `nodes` and return `state`. The nodes will get *walked* immidiately.
+Walk `nodes` (*depth-first*) and return `state`. The nodes will get *walked* immidiately.
 
 
 `stop()`  
