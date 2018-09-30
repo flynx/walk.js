@@ -39,16 +39,16 @@ This module generalizes structure traverse (*walking*). This is done via a `walk
 `getter(state, node, next, stop) -> state`  
 
 - Recieves `state`, `node` and two control functions: `next` and `stop`,
-- Called in a context (`this`), persistent within one `walk(..)` call, inherited from *walker*`.prototype`. This context is usable to store data between `getter(..)` calls,
+- Called in a context (`this`), persistent within one `walk(..)` call, inherited from *walker's* `.prototype`. This context is usable to store data between `getter(..)` calls,
 - Can process `node` and `state`,
 - Can queue nodes for walking via `next('queue', state, ...nodes) -> state`,
 - Can walk nodes directly via `next('do', state, ...nodes) -> state`,
-- Can abort *walking* and return a state via `stop()` or `stop(state)`,
+- Can abort *walking* and return a state via `stop()` (returning `undefined`) or `stop(state)`,
 - Returns `state`.
 
-`state` is *threaded* through all the `getter(..)` and `done(..)` calls, i.e. each call gets the previous call's `state` passed in, then the returned `state` gets passed on, and so on. The last function's returned `state` is in turn returned from the *walker*.
+`state` is *threaded* through all the `getter(..)` and `done(..)` calls, i.e. the first call gets the input `state`, each next call gets the previous call's returned `state` passed in, then its returned `state` gets passed on, and so on. The last function's returned `state` is in turn returned from the *walker*.
 
-Within a single *walker* call, all the `getter(..)` and `done(..)` calles a run in one common context. This context can be used to store (*thread*)additional temporary data through the *walker*. This context is dropped as soon as the *walker* returns. This context is inherited from *walker's* `.prototype` enabling the user to define persistent methods and static data usable from within the *walker's* `getter(..)` and `done(..)`.
+Within a single *walker* call, all the `getter(..)` and `done(..)` calles a run in one common context. This context can be used to store (*thread*)additional temporary data through the *walker*. This context is dropped as soon as the *walker* returns. This context object is inherited from *walker's* `.prototype` enabling the user to define persistent methods and static data usable from within the *walker's* `getter(..)` and `done(..)`.
 
 
 ### Putting it all together
