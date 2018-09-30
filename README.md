@@ -46,7 +46,7 @@ This module generalizes structure traverse (*walking*). This is done via a `walk
 - Can abort *walking* and return a state via `stop()` or `stop(state)`,
 - Returns `state`.
 
-`state` is *threaded* through all the `getter(..)` and `done(..)` calls, i.e. each call gets the previous call's `state` passed in and returns it as-is, a new or a modified `state`. The last function's returned `state` is in turn returned from the *walker*.
+`state` is *threaded* through all the `getter(..)` and `done(..)` calls, i.e. each call gets the previous call's `state` passed in, then the returned `state` gets passed on, and so on. The last function's returned `state` is in turn returned from the *walker*.
 
 Within a single *walker* call, all the `getter(..)` and `done(..)` calles a run in one common context. This context can be used to store (*thread*)additional temporary data through the *walker*. This context is dropped as soon as the *walker* returns. This context is inherited from *walker's* `.prototype` enabling the user to define persistent methods and static data usable from within the *walker's* `getter(..)` and `done(..)`.
 
