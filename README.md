@@ -19,7 +19,7 @@ An extensible tree walk(..) framework...
 
 ## Theory and operation
 
-This module generalizes structure traverse (*walking*). This is done via a `walk(..)` function that recieves a user-defined `getter(..)` function and returns a *walker*.
+This module generalizes structure traverse (*walking*, recursion). This is done via a `walk(..)` function that recieves a user-defined `getter(..)` function and returns a *walker*.
 
 
 ### Constructing the walker and walking ( walk(..) )
