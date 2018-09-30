@@ -27,22 +27,28 @@ This module generalizes structure traverse (*walking*). This is done via a `walk
 `walk(getter[, done])(state, ...nodes) -> state`  
 `walk(getter[, done], state)(...nodes) -> state`  
 `walk(getter[, done], state, ...nodes) -> state`  
-- Recieves a `getter` function, an optional `done` function, a `state` and a list of `nodes`,
+
+- Recieves a `getter(..)` function, an optional `done(..)` function, a `state` and a list of `nodes`,
 - Iterates through `nodes`, calling the `getter(..)` per node and threading the `state` through each call,
-- If `done(..)` is given, it is called passing the `state` after walking is done, the return value is set as the new `state` value,
-- Returns the `state` when there are no more `nodes`.
+- If `done(..)` is given, it is called after *walking* is done, threading `state` through,
+- Returns the `state` when walking is done.
 
 
 ### Getting and processing nodes ( getter(..) )
 
 `getter(state, node, next, stop) -> state`  
+
 - Recieves `state`, `node` and two control functions: `next` and `stop`,
-- Called in a context (`this`), persistent within one `walk(..)` call, inherited from *walker*`.prototype` and usable to store data between `getter(..)` calls,
+- Called in a context (`this`), persistent within one `walk(..)` call, inherited from *walker*`.prototype`. This context is usable to store data between `getter(..)` calls,
 - Can process `node` and `state`,
-- Can queue nodes for walking via `next('queue', state, ...nodes)`
-- Can walk nodes directly via `next('do', state, ...nodes) -> state`
-- Can abbort *walking* and return a state via `stop()` or `stop(state)`
-- Returns `state`,
+- Can queue nodes for walking via `next('queue', state, ...nodes) -> state`,
+- Can walk nodes directly via `next('do', state, ...nodes) -> state`,
+- Can abort *walking* and return a state via `stop()` or `stop(state)`,
+- Returns `state`.
+
+`state` is *threaded* through all the `getter(..)` and `done(..)` calls, i.e. each call gets the previous call's `state` passed in and returns it as-is, a new or a modified `state`. The last function's returned `state` is in turn returned from the *walker*.
+
+Within a single *walker* call, all the `getter(..)` and `done(..)` calles a run in one common context. This context can be used to store (*thread*)additional temporary data through the *walker*. This context is dropped as soon as the *walker* returns. This context is inherited from *walker's* `.prototype` enabling the user to define persistent methods and static data usable from within the *walker's* `getter(..)` and `done(..)`.
 
 
 ### Putting it all together
@@ -141,18 +147,18 @@ Walk the nodes.
 User provided function, called to process a node. `getter(..)` is passed the current `state`, the `node` and two control functions: `next(..)` and `stop(..)` to control the *walk* execution flow.
 
 
-`next('queue', state, ...nodes) -> state`  
+*`next('queue', state, ...nodes) -> state`*  
 Queue `nodes` for walking (*breadth-first*). The queued nodes will get *walked* after this level of nodes is done, i.e. after the `getter(..)` is called for each node on current level.
 
 *Note that this does not change the state in any way and returns it as-is, this is done for signature compatibility with `next('do', ..)`*
 
 
-`next('do', state, ...nodes) -> state`  
+*`next('do', state, ...nodes) -> state`*  
 Walk `nodes` (*depth-first*) and return `state`. The nodes will get *walked* immidiately.
 
 
-`stop()`  
-`stop(state)`  
+*`stop()`*  
+*`stop(state)`*  
 Stop walking and return `state`. The passed `state` is directly returned from the *walker*.
 
 *Note that `stop(..)` behaves in a similar manner to `return`, i.e. execution is aborted immidiately.*

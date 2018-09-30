@@ -11,6 +11,7 @@
     "url": "git+https://github.com/flynx/walk.js.git"
   },
   "keywords": [
+    "walk",
     "JavaScript",
     "recursion",
     "tool",
