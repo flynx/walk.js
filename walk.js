@@ -13,13 +13,11 @@
 //	walk(getter(..))
 //	walk(getter(..), done(..))
 //		-> walker(state, ...nodes)
-//			-> state
 //
 //	Construct a walker with a curried start state...
 //	walk(getter(..), state)
 //	walk(getter(..), done(..), state)
 //		-> walker(...nodes)
-//			-> state
 //
 //	Walk the set of nodes...
 //	walk(getter(..), state, ...nodes)
@@ -33,12 +31,12 @@
 // 		feasible to do a version of .map(..), i.e. a mechanism to modify/clone
 // 		the input...
 // XXX can we hint chrome to show the two singatures???
-// XXX EXPERIMENTAL: done(..) handler is not yet final...
+// XXX need to remove the restriction of not being able to pass functions
+// 		into state unless done(..) is given...
 var walk = 
 module.walk =
 function(getter, state, ...nodes){
 	// normalize the args...
-	// XXX EXPERIMENTAL...
 	var done
 	// we've got a done handler passed...
 	if(state instanceof Function){
@@ -149,7 +147,6 @@ function(getter, state, ...nodes){
 		}
 
 		// call the done handler...
-		// XXX EXPERIMENTAL...
 		res = done ?
 			done.call(context, res)
 			: res
