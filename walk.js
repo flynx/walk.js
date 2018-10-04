@@ -29,8 +29,8 @@
 //
 // XXX this is essentially a version of .reduce(..), I wonder if it is 
 // 		feasible to do a version of .map(..), i.e. a mechanism to modify/clone
-// 		the input...
-// XXX can we hint chrome to show the two singatures???
+// 		the input tree...
+// XXX can we hint chrome to show the two function singatures???
 // XXX need to remove the restriction of not being able to pass functions
 // 		into state unless done(..) is given...
 var walk = 
