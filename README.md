@@ -11,9 +11,11 @@ An extensible tree walk(..) framework...
 	- [Installation and loading](#installation-and-loading)
 	- [API](#api)
 		- [`walk(..)`](#walk)
-		- [`getter(..)`](#getter)
-		- [`done(..)`](#done)
+			- [`getter(..)`](#getter)
+			- [`done(..)`](#done)
 	- [Examples](#examples)
+	- [Contacts, feedback and contributions](#contacts-feedback-and-contributions)
+	- [License](#license)
 
 
 
@@ -141,7 +143,7 @@ Walk the nodes.
 *Note that `state` can not be a function unless `done(..)` is provided.*
 
 
-### `getter(..)`
+#### `getter(..)`
 
 `getter(state, node, next(..), stop(..)) -> state`  
 User provided function, called to process a node. `getter(..)` is passed the current `state`, the `node` and two control functions: `next(..)` and `stop(..)` to control the *walk* execution flow.
@@ -164,11 +166,10 @@ Stop walking and return `state`. The passed `state` is directly returned from th
 *Note that `stop(..)` behaves in a similar manner to `return`, i.e. execution is aborted immidiately.*
 
 
-### `done(..)`
+#### `done(..)`
 
 `done(state) -> state`  
 User provided function, if given, is called by the *walker* after walking is done (no more nodes to handle). `state` is passed as argument and the return value is returned from the *walker*. This is run in the same context (`this`) as `getter(..)`.
-
 
 
 ## Examples
@@ -254,3 +255,16 @@ firstZero([10, 5, [{x: 1, y: 0}, 4]]) // -> ['2', '0', 'y']
 ```
 
 
+## Contacts, feedback and contributions
+
+- https://github.com/flynx/walk.js
+- https://www.npmjs.com/generic-walk
+- https://github.com/flynx
+
+
+## License
+
+[BSD 3-Clause License](./LICENSE)
+
+Copyright (c) 2018, Alex A. Naanou,
+All rights reserved.
