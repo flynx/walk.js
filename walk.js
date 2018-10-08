@@ -27,6 +27,10 @@
 // NOTE: state can not be a function...
 //
 //
+// XXX Q: should next('queue', ...) return a promise???
+// 		...currently I think no, there is no need to complicate things as
+// 		the getter will eventually get all the queued nodes anyway and
+// 		done(..) will get called when everything processed...
 // XXX this is essentially a version of .reduce(..), I wonder if it is 
 // 		feasible to do a version of .map(..), i.e. a mechanism to modify/clone
 // 		the input tree...
@@ -116,14 +120,17 @@ function(getter, state, ...nodes){
 		return nodes.length == 0 ?
 			// no new nodes to walk...
 			res
-			// do the next level...
+			// do the next level (recursive)...
 			// NOTE: see note below... ( ;) )
-			: _step(context, nodes
-				.map(_get)
-				.reduce(function(next_nodes, e){
-					return e instanceof Array ? 
-						next_nodes.concat(e) 
-						: next_nodes.push(e) }, []), res) 
+			: _step(context, 
+				nodes
+					// process current nodes and get next level nodes...
+					.map(_get)
+					// merge next nodes into a single list...
+					.reduce(function(next_nodes, e){
+						// NOTE: _get(..) can either return an array 
+						// 		or stop execution...
+						return next_nodes.concat(e) }, []), res) 
 	} 
 	// _step(..) wrapper, handle WalkStopException and setup the initial
 	// context...

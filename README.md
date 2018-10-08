@@ -152,7 +152,9 @@ User provided function, called to process a node. `getter(..)` is passed the cur
 *`next('queue', state, ...nodes) -> state`*  
 Queue `nodes` for walking (*breadth-first*). The queued nodes will get *walked* after this level of nodes is done, i.e. after the `getter(..)` is called for each node on current level.
 
-*Note that this does not change the state in any way and returns it as-is, this is done for signature compatibility with `next('do', ..)`*
+*Note that this does not change the state in any way and returns it as-is, this is done for signature compatibility with `next('do', ..)`.*  
+
+*Note that a common instinct here is to expect to get a promise as a result of `next('queue', ..)`, this is not needed as the `getter(..)` will eventually get all the queued nodes as input anyway and adding promises into the mix would only complicate things.*
 
 
 *`next('do', state, ...nodes) -> state`*  
