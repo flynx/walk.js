@@ -27,13 +27,9 @@
 // NOTE: state can not be a function...
 //
 //
-// XXX Q: should next('queue', ...) return a promise???
-// 		...currently I think no, there is no need to complicate things as
-// 		the getter will eventually get all the queued nodes anyway and
-// 		done(..) will get called when everything processed...
-// XXX this is essentially a version of .reduce(..), I wonder if it is 
-// 		feasible to do a version of .map(..), i.e. a mechanism to modify/clone
-// 		the input tree...
+// XXX this is essentially a version of .reduce(..)
+// 		...is feasible to do a version of .map(..), i.e. a mechanism to 
+// 		modify/clone the input tree???
 // XXX can we hint chrome to show the two function singatures???
 // XXX need to remove the restriction of not being able to pass functions
 // 		into state unless done(..) is given...
