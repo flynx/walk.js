@@ -170,8 +170,8 @@ Stop walking and return `state`. The passed `state` is directly returned from th
 
 #### `done(..)`
 
-`done(state) -> state`  
-User provided function, if given, is called by the *walker* after walking is done (no more nodes to handle). `state` is passed as argument and the return value is returned from the *walker*. This is run in the same context (`this`) as `getter(..)`.
+`done(state, mode) -> state`  
+User provided function, if given, is called by the *walker* after walking is done (no more nodes to handle). `state` is passed as argument and the return value is returned from the *walker*. If walking was stopped via `stop(..)` mode will be `'stopped'` otherwise it is `'done'`. This is run in the same context (`this`) as `getter(..)`.
 
 
 ## Examples

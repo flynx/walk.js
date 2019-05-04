@@ -151,7 +151,7 @@ function(getter, state, ...nodes){
 
 		// call the done handler...
 		res = done ?
-			done.call(context, res)
+			done.call(context, res, WalkStopException ? 'stopped': 'done')
 			: res
 
 		return res
