@@ -149,12 +149,10 @@ function(getter, state, ...nodes){
 			}
 		}
 
-		// call the done handler...
-		res = done ?
+		return done ?
+			// call the done handler...
 			done.call(context, res, WalkStopException ? 'stopped': 'done')
 			: res
-
-		return res
 	}
 
 	return (
